@@ -5,7 +5,7 @@
 hadoop.root=/scratch/hadoop-2.9.1
 jar.name=mr-homework2-1.0.jar
 jar.path=target/${jar.name}
-job.name=edu.northeastern.ccs.cs6240.mr_homework2.RSJoin
+job.name=edu.northeastern.ccs.cs6240.mr_homework2.RepJoin
 local.input=input
 local.output=output
 # Pseudo-Cluster Execution
