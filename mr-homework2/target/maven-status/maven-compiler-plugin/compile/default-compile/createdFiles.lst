@@ -1,2 +1,7 @@
+edu/northeastern/ccs/cs6240/mr_homework2/RSJoin$RSMapper.class
+edu/northeastern/ccs/cs6240/mr_homework2/RSJoin$RSReducer.class
+edu/northeastern/ccs/cs6240/mr_homework2/RSJoin.class
+edu/northeastern/ccs/cs6240/mr_homework2/Edge.class
+edu/northeastern/ccs/cs6240/mr_homework2/FlaggedEdges.class
 edu/northeastern/ccs/cs6240/mr_homework2/FilterMax$TokenizerMapper.class
 edu/northeastern/ccs/cs6240/mr_homework2/FilterMax.class

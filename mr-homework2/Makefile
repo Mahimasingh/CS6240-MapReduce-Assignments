@@ -5,7 +5,7 @@
 hadoop.root=/scratch/hadoop-2.9.1
 jar.name=mr-homework2-1.0.jar
 jar.path=target/${jar.name}
-job.name=edu.northeastern.ccs.cs6240.mr_homework2.FilterMax
+job.name=edu.northeastern.ccs.cs6240.mr_homework2.RSJoin
 local.input=input
 local.output=output
 # Pseudo-Cluster Execution
@@ -36,7 +36,7 @@ clean-local-output:
 # Make sure Hadoop  is set up (in /etc/hadoop files) for standalone operation (not pseudo-cluster).
 # https://hadoop.apache.org/docs/current/hadoop-project-dist/hadoop-common/SingleCluster.html#Standalone_Operation
 local: jar clean-local-output
-	${hadoop.root}/bin/hadoop jar ${jar.path} ${job.name} ${local.input} ${local.output} 100
+	${hadoop.root}/bin/hadoop jar ${jar.path} ${job.name} ${local.input} ${local.output}
 
 # Start HDFS
 start-hdfs:
