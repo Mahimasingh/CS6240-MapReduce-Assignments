@@ -55,8 +55,8 @@ class FlaggedEdges implements Writable{
 	@Override
 	public void readFields(DataInput in) throws IOException {
 		String line = in.readLine();
-		from = line.split(",")[0];
-	    to = line.split(",")[1];
+		from = line.split(",")[0].substring(1, line.split(",")[0].length() -1);
+	    to = line.split(",")[1].substring(1, line.split(",")[1].length() -1);
 	    flag = Character.toString(line.split(",")[2].charAt(1));
 		
 	}
@@ -118,7 +118,6 @@ public class RSJoin extends Configured implements Tool{
 			List<Edge> TList = new ArrayList<>();
 			for (FlaggedEdges val : values) {
 				String flag = val.getFlag();
-				System.out.println("AFTER STORING FLAG" + flag);
 				if(flag.compareTo("T") == 0) {
 					e1 = new Edge(val.getFromNode(),val.getToNode());
 					SList.add(e1);
