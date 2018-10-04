@@ -128,17 +128,18 @@ public class RSJoin extends Configured implements Tool{
 					TList.add(e2);
 				}
 				else
-					logger.info("Something fishy happened!!" + flag.compareTo("S"));
+					logger.info("Something fishy happened!!");
 			}
 			
 			for(int i =0; i< SList.size();i++) {
 				for(int j = 0; j < TList.size(); j++) {
+					if(!(SList.get(i).getFrom().equals(TList.get(j).getTo()) && SList.get(i).getTo().equals(TList.get(j).getFrom()))){
+						from.set(SList.get(i).getFrom()+","+SList.get(i).getTo());
+						to.set(TList.get(j).getFrom()+","+TList.get(j).getTo());
+						context.write(from,to);
+					}
+					}
 					
-					from.set(SList.get(i).getFrom()+","+SList.get(i).getTo());
-					to.set(TList.get(j).getFrom()+","+TList.get(j).getTo());
-					logger.info("ALL IS FINE reducer3");
-					context.write(from,to);
-				}
 			}
 			
 		}
