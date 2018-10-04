@@ -134,8 +134,8 @@ public class RSJoin extends Configured implements Tool{
 			for(int i =0; i< SList.size();i++) {
 				for(int j = 0; j < TList.size(); j++) {
 					if(!(SList.get(i).getFrom().equals(TList.get(j).getTo()) && SList.get(i).getTo().equals(TList.get(j).getFrom()))){
-						from.set(SList.get(i).getFrom()+","+SList.get(i).getTo());
-						to.set(TList.get(j).getFrom()+","+TList.get(j).getTo());
+						from.set(SList.get(i).getFrom());
+						to.set(TList.get(j).getTo());
 						context.write(from,to);
 					}
 					}
