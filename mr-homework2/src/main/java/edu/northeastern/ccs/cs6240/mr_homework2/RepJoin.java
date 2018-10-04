@@ -38,7 +38,8 @@ public class RepJoin extends Configured implements Tool {
 	private static final Logger logger = LogManager.getLogger(RepJoin.class);
 	static int count = 0;
 	
-	public static class RepJoinMapper extends Mapper<Object, Text, Text, Text> {
+	
+	public static class RepJoinMapper extends Mapper<Object, Text, IntWritable, Text> {
 		private Map<String,List<String>> followerMap = new HashMap<String, List<String>>();
 		
 		public void setup(Context context) throws IOException,
@@ -101,8 +102,9 @@ public class RepJoin extends Configured implements Tool {
 			    		count = count + 1;
 			    }
 		    }
-		    logger.info("Number of Triangles in mapper " + count);
-		    logger.info("The size of hashmap" +  followerMap.size());
+		    Text val = new Text();
+		    IntWritable write = new IntWritable(count);
+		    context.write(write, val);
 		    
 		    
 		 }
@@ -122,6 +124,8 @@ public class RepJoin extends Configured implements Tool {
 		DistributedCache.addCacheFile(new URI("file:///Users/mahimasingh/mr/mr-git-folder/mahima/mr-homework2/input/input.csv"),
 				job.getConfiguration());
 		DistributedCache.setLocalFiles(job.getConfiguration(), args[0]);
+		job.setOutputKeyClass(IntWritable.class);
+		job.setOutputValueClass(Text.class);
 		FileOutputFormat.setOutputPath(job, new Path(args[1]));
 		return job.waitForCompletion(true)?0:1;
 	}
