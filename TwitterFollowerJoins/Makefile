@@ -7,7 +7,7 @@ hadoop.root=/scratch/hadoop-2.9.1/
 app.name=Follower
 jar.name=TwitterFollowerJoins.jar
 maven.jar.name=TwitterFollowerJoins-1.0.jar
-job.name=edu.northeastern.ccs.cs6240.TwitterFollowerJoins.RepJoinMain
+job.name=edu.northeastern.ccs.cs6240.TwitterFollowerJoins.RSJoinRDD
 local.master=local[4]
 local.input=input
 local.output=output
@@ -36,7 +36,7 @@ clean-local-output:
 
 # Runs standalone
 local: jar clean-local-output
-	spark-submit --class ${job.name} --master ${local.master} --name "${app.name}" ${jar.name} ${local.input} ${local.output} 100
+	spark-submit --class ${job.name} --master ${local.master} --name "${app.name}" ${jar.name} ${local.input} ${local.output}
 
 # Start HDFS
 start-hdfs:
