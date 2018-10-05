@@ -27,11 +27,11 @@ object RSJoinRDD {
                 .join(swapped)
                 .map{case(key,(value1,value2))=>(value1,value2)}
     
-    val count = RDD.join(swapped).filter{ case (x,(y,z)) => y==z  }.count()  
+    val count = RDD.join(original).filter{ case (x,(y,z)) => y==z  }.count()  
                 
     // .filter(word => word.split(",")(0).toInt < 100 && word.split(",")(1).toInt < 100) 
     
-    print("NUMBER OF TRIANGLES " + count)
+    println("NUMBER OF TRIANGLES " + count/3)
                 
   
 }
