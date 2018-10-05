@@ -17,7 +17,7 @@ hdfs.input=input
 hdfs.output=output
 # AWS EMR Execution
 aws.emr.release=emr-5.17.0
-aws.bucket.name=spark-twitter-follower-1m5w
+aws.bucket.name=spark-rdd-rsjoin
 aws.input=input
 aws.output=output
 aws.log.dir=log

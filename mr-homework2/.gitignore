@@ -1,0 +1,8 @@
+.classpath
+.project
+.settings
+dependency-reduced-pom.xml
+input
+output
+target
+test

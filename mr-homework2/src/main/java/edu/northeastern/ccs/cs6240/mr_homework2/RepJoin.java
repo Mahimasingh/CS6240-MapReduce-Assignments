@@ -18,6 +18,7 @@ import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.filecache.DistributedCache;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.mapreduce.Job;
@@ -36,49 +37,46 @@ import org.apache.log4j.Logger;
 public class RepJoin extends Configured implements Tool {
 	
 	private static final Logger logger = LogManager.getLogger(RepJoin.class);
-	static int count = 0;
 	
 	
-	public static class RepJoinMapper extends Mapper<Object, Text, IntWritable, Text> {
+	
+	public static class RepJoinMapper extends Mapper<Object, Text, IntWritable, NullWritable> {
 		private Map<String,List<String>> followerMap = new HashMap<String, List<String>>();
+		static int count = 0;
 		
 		public void setup(Context context) throws IOException,
 		InterruptedException {
 			try {
-				Path[] files = DistributedCache.getLocalCacheFiles(context
-						.getConfiguration());
-
-				if (files == null || files.length == 0) {
-					throw new RuntimeException("User information is not set in DistributedCache");
-		}
-
-		// Read all files in the DistributedCache
-		for (Path p : files) {
-			BufferedReader rdr = new BufferedReader(
-					new InputStreamReader(
-							new FileInputStream(
-									new File(p.toString()))));
-			
-
-			String line;
-			// For each record in the user file
-			while ((line = rdr.readLine()) != null) {
-					String follower = line.split(",")[0];
-					String followee = line.split(",")[1];
-					if(followerMap.containsKey(follower)) {
-						List<String> localFollowee = new ArrayList<>(followerMap.get(follower));
-						localFollowee.add(followee);
-						followerMap.put(follower, localFollowee);
-					}
-					else {
-						List<String> localFollowee = new ArrayList<>();
-						localFollowee.add(followee);
-						followerMap.put(follower, localFollowee);
+				System.out.println("ENTERING.......");
+				if (context.getCacheFiles() != null && context.getCacheFiles().length > 0) {
+					System.out.println("Found a cache File");
+					URI mappingFileUri = context.getCacheFiles()[0];
+					if (mappingFileUri != null) {
+						BufferedReader rdr = new BufferedReader(
+							new InputStreamReader(new FileInputStream(new File("./" + mappingFileUri + "/edges.csv"))));
+						String line;
+						while ((line = rdr.readLine()) != null) {
+							String follower = line.split(",")[0];
+							String followee = line.split(",")[1];
+							if(Integer.parseInt(follower) < 10000 && Integer.parseInt(followee) <10000) {
+								if(followerMap.containsKey(follower)) {
+									System.out.println("Map containes key. Size is" + followerMap.size());
+									List<String> localFollowee = new ArrayList<>(followerMap.get(follower));
+									localFollowee.add(followee);
+									followerMap.put(follower, localFollowee);
+								}
+								else {
+									System.out.println("Map doesn't containes key. Size is" + followerMap.size());
+									List<String> localFollowee = new ArrayList<>();
+									localFollowee.add(followee);
+									followerMap.put(follower, localFollowee);
+								}
+							}
+						}
+						rdr.close();
 					}
 				}
-			rdr.close();
 			}
-		}
 
 	 catch (IOException e) {
 		throw new RuntimeException(e);
@@ -93,20 +91,26 @@ public class RepJoin extends Configured implements Tool {
 			String line = value.toString();
 		    String[] user_follower = line.split(",");
 		    
-		    if(followerMap.containsKey(user_follower[1])) {
-		    	List<String> followees = new ArrayList<>(followerMap.get(user_follower[1]));
-		    	for(int i = 0; i < followees.size(); i++) {
-			    	String node3 = followees.get(i);
-			    	List<String> node3_followees = followerMap.get(node3);
-			    	if(node3_followees.contains(user_follower[0]))
-			    		count = count + 1;
-			    }
+		    if(Integer.parseInt(user_follower[0]) < 1000 && Integer.parseInt(user_follower[1]) <1000) {
+		    
+		    	if(followerMap.containsKey(user_follower[1])) {
+		    		List<String> followees = new ArrayList<>(followerMap.get(user_follower[1]));
+		    		for(int i = 0; i < followees.size(); i++) {
+		    			String node3 = followees.get(i);
+		    			List<String> node3_followees = new ArrayList<>(followerMap.get(node3));
+		    			if(node3_followees.contains(user_follower[0])) {
+		    				count = count + 1;
+		    				System.out.println("Incremented count" + count);
+		    			}
+		    		}
+		    		
+		    	NullWritable nw = NullWritable.get();
+			    IntWritable write = new IntWritable(count);
+			    System.out.println("NUMBER OF TRIANGLES"+count/3);
+			    context.write(write, nw);
+			    
+		    	}
 		    }
-		    Text val = new Text();
-		    IntWritable write = new IntWritable(count);
-		    context.write(write, val);
-		    
-		    
 		 }
 	}
 
@@ -119,14 +123,11 @@ public class RepJoin extends Configured implements Tool {
 		jobConf.set("mapreduce.output.textoutputformat.separator", "\t");
 		job.setMapperClass(RepJoinMapper.class);
 		FileInputFormat.addInputPath(job, new Path(args[0]));
-		DistributedCache.addCacheFile(new Path(args[0]).toUri(),
-				job.getConfiguration());
-		//DistributedCache.addCacheFile(new URI("file:///Users/mahimasingh/mr/mr-git-folder/mahima/mr-homework2/input/input.csv"),
-		//		job.getConfiguration());
-		DistributedCache.setLocalFiles(job.getConfiguration(), args[0]);
-		job.setOutputKeyClass(IntWritable.class);
-		job.setOutputValueClass(Text.class);
 		FileOutputFormat.setOutputPath(job, new Path(args[1]));
+		job.setOutputKeyClass(IntWritable.class);
+		job.setOutputValueClass(NullWritable.class);
+		job.addCacheFile(new Path(args[0]).toUri());
+		
 		return job.waitForCompletion(true)?0:1;
 	}
 	public static void main(final String[] args) {
@@ -136,7 +137,6 @@ public class RepJoin extends Configured implements Tool {
 
 		try {
 			ToolRunner.run(new RepJoin(), args);
-			System.out.println("Number of Triangles " + count);
 			
 		} catch (final Exception e) {
 			logger.error("", e);

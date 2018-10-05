@@ -5,7 +5,7 @@
 hadoop.root=/scratch/hadoop-2.9.1
 jar.name=mr-homework2-1.0.jar
 jar.path=target/${jar.name}
-job.name=edu.northeastern.ccs.cs6240.mr_homework2.RSJoin
+job.name=edu.northeastern.ccs.cs6240.mr_homework2.RepJoin
 local.input=input
 local.output=output
 # Pseudo-Cluster Execution
@@ -15,7 +15,7 @@ hdfs.output=output
 # AWS EMR Execution
 aws.emr.release=emr-5.17.0
 aws.region=us-east-1
-aws.bucket.name=hadoop-twitter-followers-10w1m
+aws.bucket.name=spark-rdd-rsjoin
 aws.subnet.id=subnet-ba7cfbdd
 aws.input=input
 aws.output=output
@@ -110,7 +110,7 @@ upload-app-aws:
 # Main EMR launch.
 aws: jar upload-app-aws delete-output-aws
 	aws emr create-cluster \
-		--name "Twitter MR run(3)-1m 5w" \
+		--name "HADOOP RS JOIN 1M 5W" \
 		--release-label ${aws.emr.release} \
 		--instance-groups '[{"InstanceCount":${aws.num.nodes},"InstanceGroupType":"CORE","InstanceType":"${aws.instance.type}"},{"InstanceCount":1,"InstanceGroupType":"MASTER","InstanceType":"${aws.instance.type}"}]' \
 	    --applications Name=Hadoop \

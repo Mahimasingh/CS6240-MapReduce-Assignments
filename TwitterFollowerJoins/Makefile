@@ -7,7 +7,7 @@ hadoop.root=/scratch/hadoop-2.9.1/
 app.name=Follower
 jar.name=TwitterFollowerJoins.jar
 maven.jar.name=TwitterFollowerJoins-1.0.jar
-job.name=edu.northeastern.ccs.cs6240.TwitterFollowerJoins.RepJoinRDD
+job.name=edu.northeastern.ccs.cs6240.TwitterFollowerJoins.RSJoinRDD
 local.master=local[4]
 local.input=input
 local.output=output
@@ -17,12 +17,13 @@ hdfs.input=input
 hdfs.output=output
 # AWS EMR Execution
 aws.emr.release=emr-5.17.0
-aws.bucket.name=mr-spark
+aws.bucket.name=spark-rdd-rsjoin
 aws.input=input
 aws.output=output
 aws.log.dir=log
-aws.num.nodes=1
-aws.instance.type=m3.xlarge
+aws.num.nodes=10
+aws.instance.type=m4.large
+aws.subnet.id=subnet-ba7cfbdd
 # -----------------------------------------------------------
 
 # Compiles code and builds jar (with dependencies).
@@ -110,13 +111,14 @@ upload-app-aws:
 # Main EMR launch.
 aws: jar upload-app-aws delete-output-aws
 	aws emr create-cluster \
-		--name "WordCount Spark Cluster" \
+		--name "Spark RSJOIN RDD 10W1M" \
 		--release-label ${aws.emr.release} \
 		--instance-groups '[{"InstanceCount":${aws.num.nodes},"InstanceGroupType":"CORE","InstanceType":"${aws.instance.type}"},{"InstanceCount":1,"InstanceGroupType":"MASTER","InstanceType":"${aws.instance.type}"}]' \
 	    --applications Name=Hadoop Name=Spark \
 		--steps Type=CUSTOM_JAR,Name="${app.name}",Jar="command-runner.jar",ActionOnFailure=TERMINATE_CLUSTER,Args=["spark-submit","--deploy-mode","cluster","--class","${job.name}","s3://${aws.bucket.name}/${jar.name}","s3://${aws.bucket.name}/${aws.input}","s3://${aws.bucket.name}/${aws.output}"] \
 		--log-uri s3://${aws.bucket.name}/${aws.log.dir} \
 		--use-default-roles \
+		--ec2-attributes SubnetId=${aws.subnet.id} \
 		--enable-debugging \
 		--auto-terminate
 		

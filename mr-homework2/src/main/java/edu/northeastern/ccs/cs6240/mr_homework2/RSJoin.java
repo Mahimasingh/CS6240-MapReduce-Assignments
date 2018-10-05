@@ -84,6 +84,7 @@ class Edge{
 
 public class RSJoin extends Configured implements Tool{
 	private static final Logger logger = LogManager.getLogger(RSJoin.class);
+	public static int count = 0;
 	
 	public static class RSMapper extends Mapper<Object, Text, Text, FlaggedEdges> {
 		private final Text from = new Text();
@@ -96,6 +97,7 @@ public class RSJoin extends Configured implements Tool{
 			logger.info("ALL IS FINE mapper");
 			String line = value.toString();
 		    String[] user_follower = line.split(",");
+		    if(Integer.parseInt(user_follower[1]) < 1000 && Integer.parseInt(user_follower[0]) < 1000)
 		    	from.set(user_follower[0]);
 		    	to.set(user_follower[1]);
 		    	from_val = new FlaggedEdges(user_follower[0]+",",user_follower[1]+",","S");
@@ -130,6 +132,7 @@ public class RSJoin extends Configured implements Tool{
 				else
 					logger.info("Something fishy happened!!");
 			}
+			count = count + SList.size() * TList.size();
 			
 			for(int i =0; i< SList.size();i++) {
 				for(int j = 0; j < TList.size(); j++) {
@@ -141,6 +144,7 @@ public class RSJoin extends Configured implements Tool{
 					}
 					
 			}
+			System.out.println("COUNT IS " + count);
 			
 		}
 	}

@@ -19,7 +19,7 @@ object RepJoinRDD {
                           .map(line => {
                            val userId = line.split(",")
                             (userId(0), userId(1))})
-                            .filter(edge => edge._1.toInt < 100 && edge._2.toInt <100)
+                            .filter(edge => edge._1.toInt < 1000 && edge._2.toInt <1000)
                             
      val originalRDDMap = originialRDD.collectAsMap();
      val swapped = originialRDD.map(item => item.swap)

@@ -19,7 +19,7 @@ object RSJoinRDD {
                 .map(line => {
                   val userId = line.split(",")
                   (userId(0), userId(1))})
-                .filter(edge => edge._1.toInt < 100 && edge._2.toInt <100)
+                .filter(edge => edge._1.toInt < 10000 && edge._2.toInt <10000)
                 
    val swapped = original.map(item => item.swap)
     

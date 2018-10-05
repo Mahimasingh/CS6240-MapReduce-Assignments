@@ -6,6 +6,9 @@ syntax: glob
 *.bak
 #*.off
 *.old
+dependency-reduced-pom.xml
+*.jar
+spark-warehouse
 
 # eclipse conf file
 .settings
