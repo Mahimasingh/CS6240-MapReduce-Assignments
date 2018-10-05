@@ -119,10 +119,10 @@ public class RepJoin extends Configured implements Tool {
 		jobConf.set("mapreduce.output.textoutputformat.separator", "\t");
 		job.setMapperClass(RepJoinMapper.class);
 		FileInputFormat.addInputPath(job, new Path(args[0]));
-		//DistributedCache.addCacheFile(new Path(args[0]).toUri(),
-		//		job.getConfiguration());
-		DistributedCache.addCacheFile(new URI("file:///Users/mahimasingh/mr/mr-git-folder/mahima/mr-homework2/input/input.csv"),
+		DistributedCache.addCacheFile(new Path(args[0]).toUri(),
 				job.getConfiguration());
+		//DistributedCache.addCacheFile(new URI("file:///Users/mahimasingh/mr/mr-git-folder/mahima/mr-homework2/input/input.csv"),
+		//		job.getConfiguration());
 		DistributedCache.setLocalFiles(job.getConfiguration(), args[0]);
 		job.setOutputKeyClass(IntWritable.class);
 		job.setOutputValueClass(Text.class);
