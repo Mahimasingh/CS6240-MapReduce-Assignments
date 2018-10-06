@@ -1,6 +1,6 @@
 # Makefile for Spark WordCount project.
 
-# Customize these paths for your environment.
+# Customize these paths for your environment and update the job name with the name of the object with correct package while running.
 # -----------------------------------------------------------
 spark.root=/usr/local/Cellar/apache-spark/2.3.1/libexec/
 hadoop.root=/scratch/hadoop-2.9.1/

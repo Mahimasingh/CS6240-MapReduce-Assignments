@@ -32,6 +32,9 @@ import org.apache.hadoop.util.ToolRunner;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
+/*
+ * This class implements the Replicated partition + broadcast join in Map Reduce
+ */
 
 @SuppressWarnings("deprecation")
 public class RepJoin extends Configured implements Tool {
@@ -41,6 +44,7 @@ public class RepJoin extends Configured implements Tool {
 	
 	
 	public static class RepJoinMapper extends Mapper<Object, Text, IntWritable, NullWritable> {
+		// Hash map stores the data set in <Follower, <List of Followees>>
 		private Map<String,List<String>> followerMap = new HashMap<String, List<String>>();
 		static int count = 0;
 		
@@ -60,13 +64,13 @@ public class RepJoin extends Configured implements Tool {
 							String followee = line.split(",")[1];
 							if(Integer.parseInt(follower) < 10000 && Integer.parseInt(followee) <10000) {
 								if(followerMap.containsKey(follower)) {
-									System.out.println("Map containes key. Size is" + followerMap.size());
+									//System.out.println("Map containes key. Size is" + followerMap.size());
 									List<String> localFollowee = new ArrayList<>(followerMap.get(follower));
 									localFollowee.add(followee);
 									followerMap.put(follower, localFollowee);
 								}
 								else {
-									System.out.println("Map doesn't containes key. Size is" + followerMap.size());
+									//System.out.println("Map doesn't containes key. Size is" + followerMap.size());
 									List<String> localFollowee = new ArrayList<>();
 									localFollowee.add(followee);
 									followerMap.put(follower, localFollowee);
@@ -92,7 +96,8 @@ public class RepJoin extends Configured implements Tool {
 		    String[] user_follower = line.split(",");
 		    
 		    if(Integer.parseInt(user_follower[0]) < 1000 && Integer.parseInt(user_follower[1]) <1000) {
-		    
+		    	// Here we first filter out the values which are below threshold and then using hash map,
+		    	// we find the number of triangles in the data set
 		    	if(followerMap.containsKey(user_follower[1])) {
 		    		List<String> followees = new ArrayList<>(followerMap.get(user_follower[1]));
 		    		for(int i = 0; i < followees.size(); i++) {

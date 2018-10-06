@@ -4,7 +4,9 @@ import java.io.PrintWriter
 import org.apache.log4j.Level
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.functions.broadcast
-
+/*
+ * This class implements Replicated join using Data Set
+ */
 object RepJoinMain {
   
   def main(args: Array[String]) {

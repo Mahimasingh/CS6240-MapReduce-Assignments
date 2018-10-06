@@ -24,6 +24,9 @@ import org.apache.hadoop.util.ToolRunner;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
+/*
+ * This class is used to represent the output of Two-length mapper in the form (from,to,flag)
+ */
 class FlaggedEdges implements Writable{
 	String from;
 	String to;
@@ -62,6 +65,9 @@ class FlaggedEdges implements Writable{
 	}
 }
 
+/*
+ * This class represents an edge
+ */
 class Edge{
 	String from;
 	String to;
@@ -81,7 +87,9 @@ class Edge{
 	
 	
 }
-
+/*
+ * This class produces 2-edge paths.
+ */
 public class RSJoin extends Configured implements Tool{
 	private static final Logger logger = LogManager.getLogger(RSJoin.class);
 	public static int count = 0;
@@ -94,7 +102,7 @@ public class RSJoin extends Configured implements Tool{
 		
 		@Override
 		public void map(final Object key, final Text value, final Context context) throws IOException, InterruptedException {
-			logger.info("ALL IS FINE mapper");
+			//logger.info("ALL IS FINE mapper");
 			String line = value.toString();
 		    String[] user_follower = line.split(",");
 		    if(Integer.parseInt(user_follower[1]) < 1000 && Integer.parseInt(user_follower[0]) < 1000)

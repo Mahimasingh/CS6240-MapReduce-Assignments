@@ -5,7 +5,9 @@ import org.apache.spark.SparkContext
 import org.apache.log4j.LogManager
 import org.apache.log4j.Level
 import org.apache.spark.rdd
-
+/*
+ * This class implements Replication Join using RDD
+ */
 object RepJoinRDD {
   def main(args: Array[String]) {
     val logger: org.apache.log4j.Logger = LogManager.getRootLogger
@@ -22,7 +24,8 @@ object RepJoinRDD {
                             .filter(edge => edge._1.toInt < 1000 && edge._2.toInt <1000)
                             
      val originalRDDMap = originialRDD.collectAsMap();
-     val swapped = originialRDD.map(item => item.swap)
+    // we swap because join always happens on keys but here we want Left.val = Right.key
+     val swapped = originialRDD.map(item => item.swap) 
      val swappedMap = swapped.collectAsMap();
      val broadcasted = sc.broadcast(swappedMap)
      val results = originialRDD.flatMap {case(key, value) => broadcasted.value.get(key).map { otherValue =>

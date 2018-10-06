@@ -5,7 +5,9 @@ import org.apache.log4j.LogManager
 import org.apache.log4j.Level
 import org.apache.spark.rdd
 
-
+/*
+ * This class implements Reduce side join using RDD
+ */
 object RSJoinRDD {
   def main(args: Array[String]) {
     val logger: org.apache.log4j.Logger = LogManager.getRootLogger
@@ -20,7 +22,8 @@ object RSJoinRDD {
                   val userId = line.split(",")
                   (userId(0), userId(1))})
                 .filter(edge => edge._1.toInt < 10000 && edge._2.toInt <10000)
-                
+   
+  // Here we swap as join in scala happens on keys but here we wish Left.values = Right.key              
    val swapped = original.map(item => item.swap)
     
    val RDD = original

@@ -1,11 +1,12 @@
 # Makefile for Hadoop MapReduce WordCount demo project.
 
-# Customize these paths for your environment.
+# Customize these paths for your environment and set the job name as the name of the file you wish to execute. FilterMax expects 3 parameters
+# while RepJoin and RSJoin expects 2 parameter
 # -----------------------------------------------------------
 hadoop.root=/scratch/hadoop-2.9.1
 jar.name=mr-homework2-1.0.jar
 jar.path=target/${jar.name}
-job.name=edu.northeastern.ccs.cs6240.mr_homework2.RepJoin
+job.name=edu.northeastern.ccs.cs6240.mr_homework2.FilterMax
 local.input=input
 local.output=output
 # Pseudo-Cluster Execution
@@ -36,7 +37,7 @@ clean-local-output:
 # Make sure Hadoop  is set up (in /etc/hadoop files) for standalone operation (not pseudo-cluster).
 # https://hadoop.apache.org/docs/current/hadoop-project-dist/hadoop-common/SingleCluster.html#Standalone_Operation
 local: jar clean-local-output
-	${hadoop.root}/bin/hadoop jar ${jar.path} ${job.name} ${local.input} ${local.output}
+	${hadoop.root}/bin/hadoop jar ${jar.path} ${job.name} ${local.input} ${local.output} 
 
 # Start HDFS
 start-hdfs:

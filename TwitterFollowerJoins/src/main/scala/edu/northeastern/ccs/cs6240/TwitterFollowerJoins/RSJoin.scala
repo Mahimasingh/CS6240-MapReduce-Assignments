@@ -5,7 +5,9 @@ import org.apache.log4j.Level
 import org.apache.spark.sql.SparkSession
 
 /**
- * @author ${user.name}
+ * @author Mahima Singh
+ * This class represents Reduce Side join in Data Set.
+		
  */
 object RSJoinMain {
   
