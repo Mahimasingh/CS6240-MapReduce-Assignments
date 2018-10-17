@@ -42,7 +42,7 @@ object PageRankDset {
     val graphDataFrame = sparkSession.createDataFrame(eRDD).toDF("v1","v2")
     var rankDataFrame = sparkSession.createDataFrame(prRDD).toDF("vertex","pr")
     
-    //for(i <- 1 to 10) {
+    for(i <- 1 to 3) {
     val joinedDataFrame = graphDataFrame.as("gdf")
                                       .join(rankDataFrame
                                        .as("rdf")
@@ -62,15 +62,13 @@ object PageRankDset {
     val delta = globalRanks.filter($"vertex" === 0)
                 .select("pageRank")
                 .first.getDouble(0)
-    //globalRanks.collect().foreach(println)
-     println("The value of delta is " + delta)
+    val vertexNotZeroDataFrame = globalRanks.filter($"vertex" !== 0)
+                                  .select($"vertex",$"pageRank"+ delta / (k * k))
+    val vertexZeroDataFrame = globalRanks.filter($"vertex" === 0)
+    rankDataFrame = vertexNotZeroDataFrame.union(vertexZeroDataFrame).toDF("vertex","pr")
+    rankDataFrame.collect().foreach(println)
+    }
     
-   
-    
-    
-                                       
-    
-    //}
   }
   
 }
