@@ -69,7 +69,7 @@ object PageRankDset {
     val vertexZeroDataFrame = groupedDataFrame.filter($"vertex" === 0)
     rankDataFrame = vertexNotZeroDataFrame.union(vertexZeroDataFrame).toDF("vertex","pr")
     rankDataFrame.collect().foreach(println)
-    val sumPageRank = rankDataFrame.groupBy().sum("pr").show()
+    val sumPageRank = rankDataFrame.filter($"vertex"!== 0).groupBy().sum("pr").first().getDouble(0)
     println("The sum of pageRank is" + sumPageRank)
     }
     

@@ -51,7 +51,7 @@ object App {
       val temp2RDD = tempRDD.reduceByKey(_ + _)
       val delta = temp2RDD.lookup(0)(0)
       prRDD = temp2RDD.map(vertex => if(vertex._1 !=0) (vertex._1, (vertex._2 + delta / (k*k).toDouble)) else (vertex._1,vertex._2))
-      val sum = prRDD.map(_._2).sum()
+      val sum = prRDD.map(_._2).sum() - prRDD.lookup(0)(0)
       println("The sum of all Page Ranks at" +i+ "iteration"+ sum)
   
     } 
