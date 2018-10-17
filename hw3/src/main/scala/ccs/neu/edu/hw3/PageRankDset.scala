@@ -6,6 +6,7 @@ import org.apache.log4j.LogManager
 import org.apache.log4j.Level
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.SparkContext
+import org.apache.spark.sql.functions._ 
 
 
 
@@ -42,31 +43,34 @@ object PageRankDset {
     val graphDataFrame = sparkSession.createDataFrame(eRDD).toDF("v1","v2")
     var rankDataFrame = sparkSession.createDataFrame(prRDD).toDF("vertex","pr")
     
-    for(i <- 1 to 3) {
+    for(i <- 1 to 10) {
     val joinedDataFrame = graphDataFrame.as("gdf")
                                       .join(rankDataFrame
                                        .as("rdf")
                                        ,$"gdf.v1" === $"rdf.vertex" ,"inner")
                                        .select("gdf.v2","rdf.pr")
                                        .toDF("vertex","pageRank")
-    val groupedDataFrame = joinedDataFrame.groupBy($"vertex").sum("pageRank")
-    val joinedRanks = groupedDataFrame
-                                    .as("gdf")
-                                    .join(rankDataFrame.as("rdf")
-                                     ,$"gdf.vertex" === $"rdf.vertex","rightouter")
-                                    .toDF("v1","pr1","v2","pr2")
-                                    
-    val nullDataset = joinedRanks.filter(joinedRanks("v1").isNull).select(joinedRanks("v2"),joinedRanks("pr2"))
-    val notNullDataSet = joinedRanks.filter(joinedRanks("v1").isNotNull).select(joinedRanks("v1"),joinedRanks("pr1"))
-    val globalRanks = nullDataset.union(notNullDataSet).toDF("vertex","pageRank")
-    val delta = globalRanks.filter($"vertex" === 0)
+    val noIcomingDataFrame = graphDataFrame.as("gdf")
+                                      .join(rankDataFrame
+                                       .as("rdf")
+                                       ,$"gdf.v1" === $"rdf.vertex" ,"inner")
+                                       .select("gdf.v1","rdf.pr")
+                                       .toDF("vertex","pageRank")
+                                       .filter($"vertex" % k === 1)
+                                       .withColumn("pageRank",when(col("pageRank")!==0,0))
+    val tempDataFrame = joinedDataFrame.union(noIcomingDataFrame)
+    val groupedDataFrame = tempDataFrame.groupBy($"vertex").sum("pageRank").toDF("vertex","pageRank")
+    
+    val delta = groupedDataFrame.filter($"vertex" === 0)
                 .select("pageRank")
                 .first.getDouble(0)
-    val vertexNotZeroDataFrame = globalRanks.filter($"vertex" !== 0)
+    val vertexNotZeroDataFrame = groupedDataFrame.filter($"vertex" !== 0)
                                   .select($"vertex",$"pageRank"+ delta / (k * k))
-    val vertexZeroDataFrame = globalRanks.filter($"vertex" === 0)
+    val vertexZeroDataFrame = groupedDataFrame.filter($"vertex" === 0)
     rankDataFrame = vertexNotZeroDataFrame.union(vertexZeroDataFrame).toDF("vertex","pr")
     rankDataFrame.collect().foreach(println)
+    val sumPageRank = rankDataFrame.groupBy().sum("pr").show()
+    println("The sum of pageRank is" + sumPageRank)
     }
     
   }

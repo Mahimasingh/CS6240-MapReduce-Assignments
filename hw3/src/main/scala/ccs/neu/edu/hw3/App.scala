@@ -55,6 +55,7 @@ object App {
       println("The sum of all Page Ranks at" +i+ "iteration"+ sum)
   
     } 
+    prRDD.foreach(println)
   }
   
 
