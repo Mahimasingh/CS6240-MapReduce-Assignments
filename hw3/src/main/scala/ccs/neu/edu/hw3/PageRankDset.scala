@@ -1,18 +1,12 @@
 package ccs.neu.edu.hw3
-
-/**
- * @author ${user.name}
- */
 import org.apache.spark._
-import org.apache.spark.rdd.RDD
 import org.apache.spark.SparkConf
 import org.apache.spark.SparkContext
 import org.apache.log4j.LogManager
 import org.apache.log4j.Level
-// import classes required for using GraphX
-import org.apache.spark.graphx._
-object App {
-  
+import org.apache.spark.sql.SparkSession
+
+object PageRankDset {
   class Edges (src:Int,dest:Int){
     var x: Int = src
     var y : Int = dest
@@ -22,9 +16,9 @@ object App {
     var v : Int = node
     var pageRank : Double = pr
   }
-  
   def main(args : Array[String]) {
     val logger: org.apache.log4j.Logger = LogManager.getRootLogger
+    val sparkSession = SparkSession.builder().appName("page Rank").getOrCreate()
     val conf = new SparkConf().setAppName("Creating graph")
     val sc = new SparkContext(conf)
     val k = args(0).toInt 
@@ -40,30 +34,14 @@ object App {
       }
       pageRanks:+=new PageRank(x,1.0/(k*k).toDouble)
     }
-    
-      
     var eRDD = sc.parallelize(edgesArray.map(edges => (edges.x, edges.y)), 2)
     var prRDD = sc.parallelize(pageRanks.map(pageRank => (pageRank.v,pageRank.pageRank)), 2)
-    
-    for(i <- 1 to 10) {
-      val joinRDD = eRDD.join(prRDD).map(joined => (joined._1,joined._2._1,joined._2._2))
-      val tempRDD = joinRDD.map(triple => (triple._2,triple._3))
-      val temp2RDD = tempRDD.reduceByKey(_ + _)
-      val globalPR = temp2RDD.rightOuterJoin(prRDD).mapValues({
-        case(None,v) => v
-        case(Some(pageRank),v) => pageRank
-      })
-      val delta = temp2RDD.lookup(0)(0)
-      prRDD = globalPR.map(vertex => if(vertex._1 !=0) (vertex._1, (vertex._2 + delta / (k*k).toDouble)) else (vertex._1,vertex._2))
-      
-      val sum = prRDD.map(_._2).sum()
-      
-      /*var resultRdd = globalPageRank.leftOuterJoin(prRDD).map(joined => (joined._1,joined._2._2))
-      resultRdd.foreach(println) */
-      println("The sum of all Page Ranks at" +i+ "iteration"+ sum)
-  
-      }
+    val graphDataFrame = sparkSession.createDataFrame(eRDD)
+    var rankDataFrame = sparkSession.createDataFrame(prRDD)
+    //for(i <- 1 to 10) {
+      val joinedDataSet = graphDataFrame.join(rankDataFrame)
+      joinedDataSet.collect.foreach(println)
+    //}
   }
   
-
 }

@@ -37,6 +37,12 @@
     <groupId>org.apache.spark</groupId>
     <artifactId>spark-graphx_2.11</artifactId>
     <version>2.3.2</version>
+	</dependency>
+	<dependency>
+    		<groupId>org.apache.spark</groupId>
+    		<artifactId>spark-sql_2.11</artifactId>
+    		<version>${spark.version}</version>
+    		<scope>provided</scope>
 	</dependency>	
     <!-- Example of dependency included in fat Jar package. -->
     <!--
