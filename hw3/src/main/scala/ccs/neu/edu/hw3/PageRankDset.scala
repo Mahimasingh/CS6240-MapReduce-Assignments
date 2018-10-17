@@ -5,6 +5,9 @@ import org.apache.spark.SparkContext
 import org.apache.log4j.LogManager
 import org.apache.log4j.Level
 import org.apache.spark.sql.SparkSession
+import org.apache.spark.SparkContext
+
+
 
 object PageRankDset {
   class Edges (src:Int,dest:Int){
@@ -19,8 +22,8 @@ object PageRankDset {
   def main(args : Array[String]) {
     val logger: org.apache.log4j.Logger = LogManager.getRootLogger
     val sparkSession = SparkSession.builder().appName("page Rank").getOrCreate()
-    val conf = new SparkConf().setAppName("Creating graph")
-    val sc = new SparkContext(conf)
+    import sparkSession.implicits._
+    val sc = sparkSession.sparkContext
     val k = args(0).toInt 
     var edgesArray = new Array[Edges](k*k)
     val dummy = new PageRank(0,0)
@@ -36,11 +39,37 @@ object PageRankDset {
     }
     var eRDD = sc.parallelize(edgesArray.map(edges => (edges.x, edges.y)), 2)
     var prRDD = sc.parallelize(pageRanks.map(pageRank => (pageRank.v,pageRank.pageRank)), 2)
-    val graphDataFrame = sparkSession.createDataFrame(eRDD)
-    var rankDataFrame = sparkSession.createDataFrame(prRDD)
+    val graphDataFrame = sparkSession.createDataFrame(eRDD).toDF("v1","v2")
+    var rankDataFrame = sparkSession.createDataFrame(prRDD).toDF("vertex","pr")
+    
     //for(i <- 1 to 10) {
-      val joinedDataSet = graphDataFrame.join(rankDataFrame)
-      joinedDataSet.collect.foreach(println)
+    val joinedDataFrame = graphDataFrame.as("gdf")
+                                      .join(rankDataFrame
+                                       .as("rdf")
+                                       ,$"gdf.v1" === $"rdf.vertex" ,"inner")
+                                       .select("gdf.v2","rdf.pr")
+                                       .toDF("vertex","pageRank")
+    val groupedDataFrame = joinedDataFrame.groupBy($"vertex").sum("pageRank")
+    val joinedRanks = groupedDataFrame
+                                    .as("gdf")
+                                    .join(rankDataFrame.as("rdf")
+                                     ,$"gdf.vertex" === $"rdf.vertex","rightouter")
+                                    .toDF("v1","pr1","v2","pr2")
+                                    
+    val nullDataset = joinedRanks.filter(joinedRanks("v1").isNull).select(joinedRanks("v2"),joinedRanks("pr2"))
+    val notNullDataSet = joinedRanks.filter(joinedRanks("v1").isNotNull).select(joinedRanks("v1"),joinedRanks("pr1"))
+    val globalRanks = nullDataset.union(notNullDataSet).toDF("vertex","pageRank")
+    val delta = globalRanks.filter($"vertex" === 0)
+                .select("pageRank")
+                .first.getDouble(0)
+    //globalRanks.collect().foreach(println)
+     println("The value of delta is " + delta)
+    
+   
+    
+    
+                                       
+    
     //}
   }
   
