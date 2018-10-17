@@ -46,23 +46,15 @@ object App {
     var prRDD = sc.parallelize(pageRanks.map(pageRank => (pageRank.v,pageRank.pageRank)), 2)
     
     for(i <- 1 to 10) {
-      val joinRDD = eRDD.join(prRDD).map(joined => (joined._1,joined._2._1,joined._2._2))
-      val tempRDD = joinRDD.map(triple => (triple._2,triple._3))
+      val tempRDD = eRDD.join(prRDD).flatMap(joinPair => if(joinPair._1 % k == 1) List((joinPair._1,0.toDouble),joinPair._2) 
+                                                         else List(joinPair._2)) 
       val temp2RDD = tempRDD.reduceByKey(_ + _)
-      val globalPR = temp2RDD.rightOuterJoin(prRDD).mapValues({
-        case(None,v) => v
-        case(Some(pageRank),v) => pageRank
-      })
       val delta = temp2RDD.lookup(0)(0)
-      prRDD = globalPR.map(vertex => if(vertex._1 !=0) (vertex._1, (vertex._2 + delta / (k*k).toDouble)) else (vertex._1,vertex._2))
-      
+      prRDD = temp2RDD.map(vertex => if(vertex._1 !=0) (vertex._1, (vertex._2 + delta / (k*k).toDouble)) else (vertex._1,vertex._2))
       val sum = prRDD.map(_._2).sum()
-      
-      /*var resultRdd = globalPageRank.leftOuterJoin(prRDD).map(joined => (joined._1,joined._2._2))
-      resultRdd.foreach(println) */
       println("The sum of all Page Ranks at" +i+ "iteration"+ sum)
   
-      }
+    } 
   }
   
 
