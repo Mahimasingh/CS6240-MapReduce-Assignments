@@ -19,10 +19,9 @@ object ShortestPath {
                             
      
      // TO-DO : sample and get k sources
-     val source = adjacencyListRDD.take(1)(0)._1
-     //  val source = 1
-     
-     println("The source is "+source)
+     //val source = adjacencyListRDD.take(1)(0)._1
+     val source = adjacencyListRDD.sample(false,0.2).take(1)(0)._1
+     println("The source vertex is "+source);
      adjacencyListRDD.persist()
      var activeVertices = sc.parallelize( Seq((source, 0)) )
      var globalCounts = activeVertices
