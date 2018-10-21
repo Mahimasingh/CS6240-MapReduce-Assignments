@@ -7,6 +7,11 @@ import org.apache.spark.rdd.RDD
 import scala.util.Random
 object ShortestPath {
   
+  class Vertex (src:Int,path:Int){
+    var v: Int = src
+    var d : Int = path
+  }
+  
   def main(args : Array[String]) {
     val conf = new SparkConf().setAppName("Graph Shortest path")
     val sc = new SparkContext(conf);
@@ -18,12 +23,21 @@ object ShortestPath {
                             .map(x => (x._1, x._2.toList.sortBy(x => x)))
                             
      
-     // TO-DO : sample and get k sources
-     //val source = adjacencyListRDD.take(1)(0)._1
-     val source = adjacencyListRDD.sample(false,0.2).take(1)(0)._1
-     println("The source vertex is "+source);
+     var k = args(1).toInt
+     var sourceArray = new Array[Vertex](k)
+     val sourceRDD = adjacencyListRDD.sample(false,0.2).take(k+1)
+     println("The value of k is" + k)
+     println("The size of source RDD "+ sourceRDD.size)
+     for(i <- 0 to k-1) {
+        sourceArray.update(i
+                     ,new Vertex(sourceRDD(i)._1,0))
+     }
      adjacencyListRDD.persist()
-     var activeVertices = sc.parallelize( Seq((source, 0)) )
+     
+     for(i <- 0 to k-1) { 
+     println("The source vertex is "+sourceArray(i).v);
+     
+     var activeVertices = sc.parallelize( Seq((sourceArray(i).v, 0)) )
      var globalCounts = activeVertices
      while(!activeVertices.isEmpty()) {
        var rdd = adjacencyListRDD.join(activeVertices)
@@ -37,7 +51,12 @@ object ShortestPath {
     val element = globalCounts.map(item => item.swap) // interchanges position of entries in each tuple
                  .sortByKey(ascending = false) 
                  .first()._1
-    println("The graph diameter is" + element) 
+    println("The graph diameter is" + element)
+    sourceArray(i).d = element;
+   }
+    for(i <- 0 to k-1) { 
+      println("For vertex "+ sourceArray(i).v + "largest distance is " + sourceArray(i).d)
+    }
     
   }
   

@@ -22,7 +22,8 @@ aws.input=input
 aws.output=output
 aws.log.dir=log
 aws.num.nodes=1
-aws.instance.type=m3.xlarge
+aws.instance.type=m4.large
+aws.subnet.id=subnet-ba7cfbdd
 # -----------------------------------------------------------
 
 # Compiles code and builds jar (with dependencies).
@@ -37,7 +38,7 @@ clean-local-output:
 # Runs standalone
 local: jar clean-local-output
 	# spark-submit --driver-memory 12g --class ${job.name} --master ${local.master} --name "${app.name}" ${jar.name} 100
-	spark-submit --class ${job.name} --master ${local.master} --name "${app.name}" ${jar.name} ${local.input} ${local.output}
+	spark-submit --class ${job.name} --master ${local.master} --name "${app.name}" ${jar.name} ${local.input} 4
 # Start HDFS
 start-hdfs:
 	${hadoop.root}/sbin/start-dfs.sh
