@@ -10,7 +10,7 @@ object ShortestPath {
   def main(args : Array[String]) {
     val conf = new SparkConf().setAppName("Graph Shortest path")
     val sc = new SparkContext(conf);
-    val adjacencyListRDD = sc.textFile(args(0))
+    var adjacencyListRDD = sc.textFile(args(0))
                           .map(line => {
                            val userId = line.split(",")
                             (userId(0).toInt, userId(1).toInt)})
@@ -20,21 +20,25 @@ object ShortestPath {
      
      // TO-DO : sample and get k sources
      val source = adjacencyListRDD.take(1)(0)._1
-     /*val newAdjacencyListRDD = adjacencyListRDD
-                               .map(element => if(element._1 == source) (element._1,true,0,element._2) else (element._1,false,Int.MinValue,element._2))
+     //  val source = 1
      
-     def bfs(source : Int, distanceOfSource : Int, adjacencyList : RDD[(Int,Boolean,Int,List[Int])], maxDistance : Int) {
-       
-    } */
      println("The source is "+source)
      adjacencyListRDD.persist()
-     // seems active vertices keep track of 
      var activeVertices = sc.parallelize( Seq((source, 0)) )
-     var rdd = adjacencyListRDD.join(activeVertices)
-              //.map{case(key,(value1,value2))=>(value1,value2)}
-              .flatMap{v=> v._2._1.map(g=>(g,v._2._2 +1))}
+     var globalCounts = activeVertices
+     while(!activeVertices.isEmpty()) {
+       var rdd = adjacencyListRDD.join(activeVertices)
+              .flatMap{v=> v._2._1.map(g => (g,v._2._2 +1))}
+       var filterVisitedChildren = rdd.leftOuterJoin(globalCounts).filter(record => record._2._2 == None)
+                                           .map(record => (record._1,record._2._1))
+        globalCounts = globalCounts.union(filterVisitedChildren)
+        activeVertices = filterVisitedChildren
+     } 
     
-     rdd.foreach(println)
+    val element = globalCounts.map(item => item.swap) // interchanges position of entries in each tuple
+                 .sortByKey(ascending = false) 
+                 .first()._1
+    println("The graph diameter is" + element) 
     
   }
   
