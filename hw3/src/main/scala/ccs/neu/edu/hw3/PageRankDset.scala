@@ -25,7 +25,7 @@ object PageRankDset {
     val sparkSession = SparkSession.builder().appName("page Rank").getOrCreate()
     import sparkSession.implicits._
     val sc = sparkSession.sparkContext
-    val k = args(0).toInt 
+    val k = 100
     var edgesArray = new Array[Edges](k*k)
     val dummy = new PageRank(0,0)
     var pageRanks = Array(dummy)
@@ -63,15 +63,26 @@ object PageRankDset {
     
     val delta = groupedDataFrame.filter($"vertex" === 0)
                 .select("pageRank")
-                .first.getDouble(0)
+                .first.getDouble(0) 
+    
     val vertexNotZeroDataFrame = groupedDataFrame.filter($"vertex" !== 0)
                                   .select($"vertex",$"pageRank"+ delta / (k * k))
     val vertexZeroDataFrame = groupedDataFrame.filter($"vertex" === 0)
     rankDataFrame = vertexNotZeroDataFrame.union(vertexZeroDataFrame).toDF("vertex","pr")
-    rankDataFrame.collect().foreach(println)
     val sumPageRank = rankDataFrame.filter($"vertex"!== 0).groupBy().sum("pr").first().getDouble(0)
-    println("The sum of pageRank is" + sumPageRank)
+    joinedDataFrame.unpersist(true);
+    noIcomingDataFrame.unpersist(true)
+    tempDataFrame.unpersist(true)
+    groupedDataFrame.unpersist(true)
+    vertexNotZeroDataFrame.unpersist(true)
+    vertexZeroDataFrame.unpersist(true)
+    
+    
+    println("The sum of pageRank at" +i+"is "+ sumPageRank)
     }
+    rankDataFrame.sort(desc("pr")).head(101).foreach(println)
+    
+    //.collect.foreach(println)
     
   }
   

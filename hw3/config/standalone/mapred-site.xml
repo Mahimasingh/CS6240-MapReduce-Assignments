@@ -26,7 +26,7 @@
     
     <property>
     	<name>mapred.child.java.opts</name>
-    	<value>-Xmx4096m</value>
+    	<value>-Xmx6g</value>
 	</property>
   
     <property>
@@ -39,10 +39,5 @@
 		<value>4096</value>
     </property>
     
-<!-- 
-	<property>
-		<name>mapred.child.java.opts</name>
-		<value>-Djava.library.path=/home/joe/R/x86_64-pc-linux-gnu-library/3.2/rJava/jri/ -Xms512M -Xmx1524M</value>
-	</property>
--->
+
 </configuration>

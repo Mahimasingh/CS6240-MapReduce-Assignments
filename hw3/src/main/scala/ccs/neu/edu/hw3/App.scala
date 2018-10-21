@@ -55,7 +55,8 @@ object App {
       println("The sum of all Page Ranks at" +i+ "iteration"+ sum)
   
     } 
-    prRDD.foreach(println)
+    prRDD.map(item => item.swap) // interchanges position of entries in each tuple
+                 .sortByKey(ascending = false).top(101).foreach(println)
   }
   
 
