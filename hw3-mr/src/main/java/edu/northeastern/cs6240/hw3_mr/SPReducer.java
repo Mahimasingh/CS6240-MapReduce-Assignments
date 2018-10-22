@@ -9,9 +9,9 @@ import org.apache.hadoop.mapreduce.Counter;
 
 import org.apache.log4j.Logger;
 /*
- * This codebase is referenced from (https://github.com/louridas/hadoop-shortest-paths/blob/master/AdjacencyListCreator.java)
+ * This codebase is referenced from (https://github.com/louridas/hadoop-shortest-paths)
  */
-public class BFSReducer
+public class SPReducer
     extends Reducer<Text, Text, Text, Text> {
     
     private Logger logger = Logger.getLogger(this.getClass());

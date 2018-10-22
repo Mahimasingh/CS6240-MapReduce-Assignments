@@ -47,8 +47,8 @@ public class Driver extends Configured implements Tool {
             output = args[1] + "-" + numIterations;
 
             job.setJarByClass(Driver.class);
-            job.setMapperClass(BFSMapper.class);
-            job.setReducerClass(BFSReducer.class);
+            job.setMapperClass(SPMapper.class);
+            job.setReducerClass(SPReducer.class);
             job.setOutputKeyClass(Text.class);
             job.setOutputValueClass(Text.class);
             FileInputFormat.addInputPath(job, new Path(input));

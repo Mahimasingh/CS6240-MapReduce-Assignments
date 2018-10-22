@@ -10,7 +10,7 @@ import org.apache.log4j.Logger;
 /*
  * This codebase is referenced from (https://github.com/louridas/hadoop-shortest-paths/blob/master/AdjacencyListCreator.java)
  */
-public class BFSMapper
+public class SPMapper
     extends Mapper<Object, Text, Text, Text>{
 
     private Logger logger = Logger.getLogger(this.getClass());
