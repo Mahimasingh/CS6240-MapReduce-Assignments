@@ -7,7 +7,7 @@ hadoop.root=/scratch/hadoop-2.9.1/
 app.name=Page Rank
 jar.name=hw3.jar
 maven.jar.name=hw3-1.0.jar
-job.name=ccs.neu.edu.hw3.ShortestPath
+job.name=ccs.neu.edu.hw3.ShortestPathDF
 local.master=local[4]
 local.input=input
 local.output=output
@@ -17,11 +17,11 @@ hdfs.input=input
 hdfs.output=output
 # AWS EMR Execution
 aws.emr.release=emr-5.17.0
-aws.bucket.name=spark-pagerank
+aws.bucket.name=spark-sp
 aws.input=input
 aws.output=output
 aws.log.dir=log
-aws.num.nodes=1
+aws.num.nodes=5
 aws.instance.type=m4.large
 aws.subnet.id=subnet-ba7cfbdd
 # -----------------------------------------------------------
@@ -37,8 +37,9 @@ clean-local-output:
 
 # Runs standalone
 local: jar clean-local-output
-	# spark-submit --driver-memory 12g --class ${job.name} --master ${local.master} --name "${app.name}" ${jar.name} 100
-	spark-submit --class ${job.name} --master ${local.master} --name "${app.name}" ${jar.name} ${local.input} 4
+	# spark-submit --driver-memory 12g --class ${job.name} --master ${local.master} --name "${app.name}" ${jar.name} 100 
+	# spark-submit --class ${job.name} --master ${local.master} --name "${app.name}" ${jar.name} ${local.input} 4
+	# spark-submit --class ${job.name} --master ${local.master} --name "${app.name}" ${jar.name} ${local.input} 1
 # Start HDFS
 start-hdfs:
 	${hadoop.root}/sbin/start-dfs.sh
@@ -111,7 +112,7 @@ upload-app-aws:
 # Main EMR launch.
 aws: jar upload-app-aws delete-output-aws
 	aws emr create-cluster \
-		--name "pageRank Spark Cluster" \
+		--name "ShortestPath Spark DF Small Cluster" \
 		--release-label ${aws.emr.release} \
 		--instance-groups '[{"InstanceCount":${aws.num.nodes},"InstanceGroupType":"CORE","InstanceType":"${aws.instance.type}"},{"InstanceCount":1,"InstanceGroupType":"MASTER","InstanceType":"${aws.instance.type}"}]' \
 	    --applications Name=Hadoop Name=Spark \
@@ -119,6 +120,7 @@ aws: jar upload-app-aws delete-output-aws
 		--log-uri s3://${aws.bucket.name}/${aws.log.dir} \
 		--use-default-roles \
 		--enable-debugging \
+		--ec2-attributes SubnetId=${aws.subnet.id} \
 		--auto-terminate
 		
 # Download output from S3.

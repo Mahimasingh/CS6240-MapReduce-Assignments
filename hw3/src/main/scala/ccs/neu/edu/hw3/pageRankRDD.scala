@@ -11,7 +11,7 @@ import org.apache.log4j.LogManager
 import org.apache.log4j.Level
 // import classes required for using GraphX
 import org.apache.spark.graphx._
-object App {
+object pageRankRDD {
   
   class Edges (src:Int,dest:Int){
     var x: Int = src
@@ -48,15 +48,18 @@ object App {
     for(i <- 1 to 10) {
       val tempRDD = eRDD.join(prRDD).flatMap(joinPair => if(joinPair._1 % k == 1) List((joinPair._1,0.toDouble),joinPair._2) 
                                                          else List(joinPair._2)) 
+      //println("----------------------" + i + "---------------------------------------------------")
+      //println(tempRDD.toDebugString)
+      //println("-----------------------" + i + "--------------------------------------------------")
       val temp2RDD = tempRDD.reduceByKey(_ + _)
       val delta = temp2RDD.lookup(0)(0)
       prRDD = temp2RDD.map(vertex => if(vertex._1 !=0) (vertex._1, (vertex._2 + delta / (k*k).toDouble)) else (vertex._1,vertex._2))
       val sum = prRDD.map(_._2).sum() - prRDD.lookup(0)(0)
       println("The sum of all Page Ranks at" +i+ "iteration"+ sum)
-  
+      //println(prRDD.toDebugString)
     } 
     prRDD.map(item => item.swap) // interchanges position of entries in each tuple
-                 .sortByKey(ascending = false).top(101).foreach(println)
+                 .sortByKey(ascending = false).top(101).foreach(println) 
   }
   
 

@@ -3,7 +3,13 @@ import org.apache.log4j.LogManager
 import org.apache.log4j.Level
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.functions.explode
+import org.apache.spark.sql.functions._ 
 object ShortestPathDF {
+  
+  class Vertex (src:Int,path:Int){
+    var v: Int = src
+    var d : Int = path
+  }
   
   def main(args: Array[String]) {
     val logger: org.apache.log4j.Logger = LogManager.getRootLogger
@@ -22,14 +28,25 @@ object ShortestPathDF {
                             .map(x => (x._1, x._2.toList.sortBy(x => x)))
                             .toDF("v1","list")
     val k = args(1).toInt
-    val source = adjacencyListDF.sample(0.2,k+1).select($"v1").first().getInt(0)
-    println("The source is "+source)
-    adjacencyListDF.collect().foreach(println)
-    var activeVertices = Seq((source, 0)).toDF("vertex", "distance")
-    adjacencyListDF.persist()
-    var globalCountsDF = activeVertices
-    while(!activeVertices.rdd.isEmpty()){
-      var joinedDF = activeVertices.as("av").join(adjacencyListDF.as("al"),$"av.vertex" === $"al.v1","inner")
+    var sourceArray = new Array[Vertex](k)
+    val sourceDF = adjacencyListDF
+                        .sample(0.2,k+4)
+                        .select($"v1")
+                        .head(k)
+    for(i <- 0 to k-1) {
+        sourceArray.update(i
+                     ,new Vertex(sourceDF(i).getAs(0),0))
+     }
+    
+    for(i <- 0 to k-1) { 
+     println("Starting for source value "+sourceArray(i).v)
+     adjacencyListDF.collect().foreach(println)
+     var activeVertices = Seq((sourceArray(i).v, 0)).toDF("vertex", "distance")
+     adjacencyListDF.persist()
+     var globalCountsDF = activeVertices
+     
+     while(!activeVertices.rdd.isEmpty()){
+      var joinedDF = activeVertices.as("av").join(broadcast(adjacencyListDF).as("al"),$"av.vertex" === $"al.v1","inner")
                                              .select($"al.list",$"av.distance" + 1)
                                              .withColumn("al.list",explode($"al.list"))
                                              .toDF("col1","col2","col3")
@@ -42,8 +59,14 @@ object ShortestPathDF {
        activeVertices = filterVisitedChildren
       
     }
+    var distance = globalCountsDF.sort(desc("distance")).select($"distance").first().getInt(0)
+    println("Longest path is " + distance )
+    sourceArray(i).d = distance;
+    }
     
-    globalCountsDF.collect().foreach(println)
+    for(i <- 0 to k-1) { 
+      println("For vertex "+ sourceArray(i).v + "largest distance is " + sourceArray(i).d)
+    } 
     
   
 }

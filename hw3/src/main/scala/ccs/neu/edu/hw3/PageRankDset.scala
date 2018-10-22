@@ -25,7 +25,7 @@ object PageRankDset {
     val sparkSession = SparkSession.builder().appName("page Rank").getOrCreate()
     import sparkSession.implicits._
     val sc = sparkSession.sparkContext
-    val k = 100
+    val k = args(0).toInt
     var edgesArray = new Array[Edges](k*k)
     val dummy = new PageRank(0,0)
     var pageRanks = Array(dummy)
@@ -50,6 +50,9 @@ object PageRankDset {
                                        ,$"gdf.v1" === $"rdf.vertex" ,"inner")
                                        .select("gdf.v2","rdf.pr")
                                        .toDF("vertex","pageRank")
+    //println("--------------------------------------------------------------------------------------")
+    //joinedDataFrame.explain(true)
+    //println("--------------------------------------------------------------------------------------")
     val noIcomingDataFrame = graphDataFrame.as("gdf")
                                       .join(rankDataFrame
                                        .as("rdf")
@@ -58,6 +61,9 @@ object PageRankDset {
                                        .toDF("vertex","pageRank")
                                        .filter($"vertex" % k === 1)
                                        .withColumn("pageRank",when(col("pageRank")!==0,0))
+    //println("--------------------------------------------------------------------------------------")
+    //noIcomingDataFrame.explain(true)
+    //println("--------------------------------------------------------------------------------------")
     val tempDataFrame = joinedDataFrame.union(noIcomingDataFrame)
     val groupedDataFrame = tempDataFrame.groupBy($"vertex").sum("pageRank").toDF("vertex","pageRank")
     
@@ -82,7 +88,6 @@ object PageRankDset {
     }
     rankDataFrame.sort(desc("pr")).head(101).foreach(println)
     
-    //.collect.foreach(println)
     
   }
   
