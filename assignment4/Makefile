@@ -5,7 +5,7 @@
 hadoop.root=/scratch/hadoop-2.9.1
 jar.name=assignment4-1.0.jar
 jar.path=target/${jar.name}
-job.name=edu.northeastern.cs6240.assignment4.FindMaxFollowers
+job.name=edu.northeastern.cs6240.assignment4.KMeans
 local.input=input
 local.output=output
 # Pseudo-Cluster Execution
@@ -36,7 +36,7 @@ clean-local-output:
 # Make sure Hadoop  is set up (in /etc/hadoop files) for standalone operation (not pseudo-cluster).
 # https://hadoop.apache.org/docs/current/hadoop-project-dist/hadoop-common/SingleCluster.html#Standalone_Operation
 local: jar clean-local-output
-	${hadoop.root}/bin/hadoop jar ${jar.path} ${job.name} ${local.input} ${local.output}
+	${hadoop.root}/bin/hadoop jar ${jar.path} ${job.name} ${local.input} ${local.output} centroid
 
 # Start HDFS
 start-hdfs:
@@ -83,7 +83,7 @@ download-output-hdfs: clean-local-output
 # Make sure Hadoop  is set up (in /etc/hadoop files) for pseudo-clustered operation (not standalone).
 # https://hadoop.apache.org/docs/current/hadoop-project-dist/hadoop-common/SingleCluster.html#Pseudo-Distributed_Operation
 pseudo: jar stop-yarn format-hdfs init-hdfs upload-input-hdfs start-yarn clean-local-output 
-	${hadoop.root}/bin/hadoop jar ${jar.path} ${job.name} ${hdfs.input} ${hdfs.output}
+	${hadoop.root}/bin/hadoop jar ${jar.path} ${job.name} ${hdfs.input} ${hdfs.output} centroid
 	make download-output-hdfs
 
 # Runs pseudo-clustered (quickie).

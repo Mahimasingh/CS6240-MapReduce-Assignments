@@ -6,6 +6,7 @@ import java.util.StringTokenizer;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
@@ -29,28 +30,45 @@ import org.apache.hadoop.mapreduce.Counters;
 
 public class FindMaxFollowers extends Configured implements Tool {
 	
-	/*static enum MaxValue {
-        maximum
-    }
-    */
-	static long maxValue;
+
+	
 	private static final Logger logger = LogManager.getLogger(FindMaxFollowers.class);
 	
-	public static class TokenizerMapper extends Mapper<Object, Text, Text, IntWritable> {
+	public static class TokenizerMapper extends Mapper<Object, Text, Text, DoubleWritable> {
 		
+		
+		public static double maxValue = 0;
 		
 		@Override
 		public void map(final Object key, final Text value, final Context context) throws IOException, InterruptedException {
 			String line = value.toString();
-		    String[] user_follower = line.split(",");
-		    long followers = Long.parseLong(user_follower[1]);
-		    /*Counter maxSoFar =
-		            context.getCounter(FindMaxFollowers.MaxValue.maximum); */
+		    String[] user_follower = line.split("\\s+");
+		    double followers = Double.parseDouble(user_follower[1]);
 		    if(followers > maxValue) {
-		    	//maxSoFar.setValue(followers);
 		    	maxValue = followers;
+		    	DoubleWritable outVal = new DoubleWritable();
+			    outVal.set(maxValue);
+			    Text outKey = new Text("global");
+			    context.write(outKey, outVal);
 		    }
 		    
+		    
+		}
+	}
+	
+	public static class IntSumReducer extends Reducer<Text, DoubleWritable, Text, DoubleWritable> {
+
+		@Override
+		public void reduce(final Text key, final Iterable<DoubleWritable> values, final Context context) throws IOException, InterruptedException {
+			double maximum = 0;
+			for (DoubleWritable val : values) {
+				if(maximum < val.get())
+					maximum = val.get();
+			}
+			Text outKey = new Text();
+			DoubleWritable outVal = new DoubleWritable();
+		    outVal.set(maximum);
+			context.write(outKey, outVal);
 		}
 	}
 	public int run(String[] args) throws Exception {
@@ -60,21 +78,12 @@ public class FindMaxFollowers extends Configured implements Tool {
 		final Configuration jobConf = job.getConfiguration();
 		jobConf.set("mapreduce.output.textoutputformat.separator", "\t");
 		job.setMapperClass(TokenizerMapper.class);
+		job.setReducerClass(IntSumReducer.class);
 		job.setOutputKeyClass(Text.class);
-		job.setOutputValueClass(IntWritable.class);
+		job.setOutputValueClass(DoubleWritable.class);
 		FileInputFormat.addInputPath(job, new Path(args[0]));
 		FileOutputFormat.setOutputPath(job, new Path(args[1]));
-		maxValue = Integer.MIN_VALUE;
-		
-		//max.setValue(Integer.MIN_VALUE);
-		int code =  job.waitForCompletion(true)?0:1;
-		/*Counters jobCounters = job.getCounters();
-		Counter max = jobCounters.
-        findCounter(MaxValue.maximum);
-		long value = max.getValue(); */
-		System.out.println("The maximum value of followers :"+ maxValue);
-		return code;
-		
+		return job.waitForCompletion(true)?0:1;
 	}
 	public static void main(final String[] args) {
 		try {
