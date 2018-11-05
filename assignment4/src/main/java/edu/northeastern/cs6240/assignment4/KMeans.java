@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -14,6 +15,8 @@ import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapreduce.Counter;
+import org.apache.hadoop.mapreduce.Counters;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Reducer;
@@ -24,12 +27,16 @@ import org.apache.hadoop.util.ToolRunner;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 import edu.northeastern.cs6240.assignment4.KMeans.KMapper.KReducer;
+
+
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 
 @SuppressWarnings("deprecation")
 public class KMeans extends Configured implements Tool {
-	
+	static enum SumOfSquaredError {
+        sumError
+    }
 	private static final Logger logger = LogManager.getLogger(KMeans.class);
 	public static List<Double> centers = new ArrayList<Double>();
 	public static String SPLITTER = "\t| ";
@@ -100,16 +107,31 @@ public class KMeans extends Configured implements Tool {
 			double newCenter;
 			double sum = 0;
 			int no_elements = 0;
+			List<Double> elements = new ArrayList<Double>();
 			for(Text val : values) {
-				sum = sum + Double.parseDouble(val.toString().split(",")[1]);
+				double followerValue = Double.parseDouble(val.toString().split(",")[1]);
+				sum = sum + followerValue;
+				elements.add(followerValue);
 				no_elements++;
 			}
 			newCenter = sum/no_elements;
 			
-			
+			calculateSumSquaredError(key.get(),elements,context);
 			Text outVal = new Text();
 			DoubleWritable outKey = new DoubleWritable(newCenter);
 			context.write(outKey,outVal);
+		}
+		
+		private void calculateSumSquaredError(double center, List<Double> values , Context context) {
+			
+			double sumSquaredError = 0;
+			for(double val : values) {
+				sumSquaredError = sumSquaredError + Math.pow(Math.abs(val - center), 2);
+			}
+			Counter error =
+		            context.getCounter(KMeans.SumOfSquaredError.sumError);
+			sumSquaredError = sumSquaredError * 100;
+			error.increment(Math.round(sumSquaredError));
 		}
 	}
 	
@@ -160,6 +182,11 @@ public class KMeans extends Configured implements Tool {
             ++iteration;
 			
 			code = job.waitForCompletion(true) ? 0 : 1;
+			Counters jobCounters = job.getCounters();
+            long errorVal = jobCounters.
+                findCounter(SumOfSquaredError.sumError).getValue();
+            System.out.println("\n \n The value of Sum Squared Error " + errorVal/100.0 + "\n\n");
+			
 		}
 		return code;
 	}
