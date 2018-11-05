@@ -38,26 +38,22 @@ public class KMeans extends Configured implements Tool {
         sumError
     }
 	private static final Logger logger = LogManager.getLogger(KMeans.class);
-	public static List<Double> centers = new ArrayList<Double>();
-	public static String SPLITTER = "\t| ";
 	
+	public static String SPLITTER = "\t| ";
 	
 	
 	public static class KMapper extends Mapper<Object, Text, DoubleWritable, Text> {
 		
-		
+		public List<Double> centers = new ArrayList<Double>();
 		@Override
 	    public void setup(Context context) throws IllegalArgumentException, IOException {
-	        System.out.println("setup has been called");
+	       
 			try {
 				// Fetch the file from Distributed Cache Read it and store the
 				// centroid in the ArrayList
 				URI[] cacheFiles = context.getCacheFiles();
 				for(int i=0; i<cacheFiles.length; i++) {
-					
-					System.out.println("\n~~~~~~ENTERED THE SETUP JOB!!!!!\n");
 					String line;
-					centers.clear();
 					URI cacheFile = cacheFiles[i];
 					FileSystem fs = FileSystem.get(cacheFile, new Configuration());
 					InputStreamReader fis = new InputStreamReader(fs.open(new Path(cacheFile.getPath())));
@@ -66,8 +62,7 @@ public class KMeans extends Configured implements Tool {
 						// Read the file split by the splitter and store it in
 						// the list
 						while ((line = cacheReader.readLine()) != null) {
-							String[] temp = line.split(SPLITTER);
-							centers.add(Double.parseDouble(temp[0]));
+							centers.add(Double.parseDouble(line));
 							System.out.println(centers);
 						}
 					} finally {
@@ -84,8 +79,8 @@ public class KMeans extends Configured implements Tool {
 		public void map(final Object key, final Text value, final Context context) throws IOException, InterruptedException {
 		
 		String line = value.toString();
-	    String[] user_follower = line.split(",");
-	    System.out.println("\n~~~~~~ENTERED THE MAP JOB!!!!!\n");
+	    String[] user_follower = line.split("\\s+");
+	    
 	    double followers = Double.parseDouble(user_follower[1]);
 	    double closestCenter = Integer.MAX_VALUE;
 	    double distanceFromCenter = Math.abs(closestCenter - followers); 
@@ -109,7 +104,7 @@ public class KMeans extends Configured implements Tool {
 			int no_elements = 0;
 			List<Double> elements = new ArrayList<Double>();
 			for(Text val : values) {
-				double followerValue = Double.parseDouble(val.toString().split(",")[1]);
+				double followerValue = Double.parseDouble(val.toString().split("\\s+")[1]);
 				sum = sum + followerValue;
 				elements.add(followerValue);
 				no_elements++;
@@ -119,7 +114,7 @@ public class KMeans extends Configured implements Tool {
 			calculateSumSquaredError(key.get(),elements,context);
 			Text outVal = new Text();
 			DoubleWritable outKey = new DoubleWritable(newCenter);
-			context.write(outKey,outVal);
+			context.write(outKey,null);
 		}
 		
 		private void calculateSumSquaredError(double center, List<Double> values , Context context) {
@@ -141,7 +136,7 @@ public class KMeans extends Configured implements Tool {
 		boolean isdone = false;
 		String input, output;
 		int code = 0;
-		while (isdone == false) {
+		while (isdone == false && iteration < 11) {
 			Configuration conf = this.getConf();
 			Job job = Job.getInstance(conf, "K-Means");
 			
@@ -153,7 +148,7 @@ public class KMeans extends Configured implements Tool {
 			}
 			else {
 				output = args[1] + "/" + iteration;
-				String centroidFileName = args[1]+"/"+(iteration-1)+"/part-r-00000";
+				String centroidFileName = args[1]+"/"+(iteration-1);
 				addCentroidFileToCache(centroidFileName,conf,job);
 			}
 			
@@ -164,7 +159,7 @@ public class KMeans extends Configured implements Tool {
             job.setReducerClass(KReducer.class);
             job.setOutputKeyClass(DoubleWritable.class);
             job.setOutputValueClass(Text.class);
-            if(iteration > 1) {
+            /*if(iteration > 1) {
             	List<Double> newCenters = getNextCenterPoints(args[1] +"/" + (iteration-1)+"/part-r-00000");
             	List<Double> prevCenters = getPreviousCenterPoints(args[1] + "/" + (iteration -2)+"/part-r-00000");
             	Collections.sort(newCenters);
@@ -178,7 +173,7 @@ public class KMeans extends Configured implements Tool {
             			isdone = false;
             			break;
             		}
-            }}
+            }} */
             ++iteration;
 			
 			code = job.waitForCompletion(true) ? 0 : 1;
