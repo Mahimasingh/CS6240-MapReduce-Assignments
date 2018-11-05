@@ -8,6 +8,7 @@ jar.path=target/${jar.name}
 job.name=edu.northeastern.cs6240.assignment4.KMeans
 local.input=input
 local.output=output
+local.centroid=centroid
 # Pseudo-Cluster Execution
 hdfs.user.name=mahimasingh
 hdfs.input=input
@@ -15,10 +16,11 @@ hdfs.output=output
 # AWS EMR Execution
 aws.emr.release=emr-5.17.0
 aws.region=us-east-1
-aws.bucket.name=hadoop-twitter-followers-5w1m
+aws.bucket.name=twitter-k-means
 aws.subnet.id=subnet-6356553a
 aws.input=input
 aws.output=output
+aws.centroid=centroid
 aws.log.dir=log
 aws.num.nodes=5
 aws.instance.type=m4.large
@@ -36,7 +38,7 @@ clean-local-output:
 # Make sure Hadoop  is set up (in /etc/hadoop files) for standalone operation (not pseudo-cluster).
 # https://hadoop.apache.org/docs/current/hadoop-project-dist/hadoop-common/SingleCluster.html#Standalone_Operation
 local: jar clean-local-output
-	${hadoop.root}/bin/hadoop jar ${jar.path} ${job.name} ${local.input} ${local.output} centroid
+	${hadoop.root}/bin/hadoop jar ${jar.path} ${job.name} ${local.input} ${local.output} ${local.centroid}
 
 # Start HDFS
 start-hdfs:
@@ -69,6 +71,7 @@ init-hdfs: start-hdfs
 # Load data to HDFS
 upload-input-hdfs: start-hdfs
 	${hadoop.root}/bin/hdfs dfs -put ${local.input}/* /user/${hdfs.user.name}/${hdfs.input}
+	${hadoop.root}/bin/hdfs dfs -put ${local.centroid}/* /user/${hdfs.user.name}/${hdfs.centroid}
 
 # Removes hdfs output directory.
 clean-hdfs-output:
@@ -97,7 +100,8 @@ make-bucket:
 
 # Upload data to S3 input dir.
 upload-input-aws: make-bucket
-	aws s3 sync ${local.input} s3://${aws.bucket.name}/${aws.input}
+	# aws s3 sync ${local.input} s3://${aws.bucket.name}/${aws.input}
+	aws s3 sync ${local.centroid} s3://${aws.bucket.name}/${aws.centroid}
 	
 # Delete S3 output dir.
 delete-output-aws:
@@ -110,11 +114,11 @@ upload-app-aws:
 # Main EMR launch.
 aws: jar upload-app-aws delete-output-aws
 	aws emr create-cluster \
-		--name "WordCount MR Cluster" \
+		--name "K-means bad 5w1m" \
 		--release-label ${aws.emr.release} \
 		--instance-groups '[{"InstanceCount":${aws.num.nodes},"InstanceGroupType":"CORE","InstanceType":"${aws.instance.type}"},{"InstanceCount":1,"InstanceGroupType":"MASTER","InstanceType":"${aws.instance.type}"}]' \
 	    --applications Name=Hadoop \
-	    --steps '[{"Args":["${job.name}","s3://${aws.bucket.name}/${aws.input}","s3://${aws.bucket.name}/${aws.output}"],"Type":"CUSTOM_JAR","Jar":"s3://${aws.bucket.name}/${jar.name}","ActionOnFailure":"TERMINATE_CLUSTER","Name":"Custom JAR"}]' \
+	    --steps '[{"Args":["${job.name}","s3://${aws.bucket.name}/${aws.input}","s3://${aws.bucket.name}/${aws.output}","s3://${aws.bucket.name}/${aws.centroid}"],"Type":"CUSTOM_JAR","Jar":"s3://${aws.bucket.name}/${jar.name}","ActionOnFailure":"TERMINATE_CLUSTER","Name":"Custom JAR"}]' \
 		--log-uri s3://${aws.bucket.name}/${aws.log.dir} \
 		--use-default-roles \
 		--enable-debugging \
